@@ -61,7 +61,7 @@ const getRFIHands = (position) => {
 };
 
 // Helper function to get hands to exclude based on drill type
-// Helper function to get hands to exclude based on drill type
+
 const getExcludedHands = (drillName) => {
   // Check if this is an RFI drill
   if (drillName && (drillName.startsWith('RFI ') || drillName === 'RFI Random')) {
