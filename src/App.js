@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import './App.css';
 import { drillActions } from './data/drillActions';
-import { EXCLUDED_HANDS } from './data/excludedHandsGeneral';
+import { EXCLUDED_HANDS, EXCLUDED_HANDS_RFI, EXCLUDED_HANDS_FACING_OPEN } from './data/excludedHandsGeneral';
 
 // Hand classification utilities
 const getHandKey = (card1, card2) => {
@@ -61,7 +61,18 @@ const getRFIHands = (position) => {
 };
 
 // Helper function to get hands to exclude based on drill type
+// Helper function to get hands to exclude based on drill type
 const getExcludedHands = (drillName) => {
+  // Check if this is an RFI drill
+  if (drillName && (drillName.startsWith('RFI ') || drillName === 'RFI Random')) {
+    return EXCLUDED_HANDS_RFI;
+  }
+  
+  // Check if this is a Facing Open drill
+  if (drillName && drillName.startsWith('Facing Open ')) {
+    return EXCLUDED_HANDS_FACING_OPEN;
+  }
+  
   // Check if this is a 3bet drill
   if (drillName && drillName.includes('Facing 3bet')) {
     // Extract the user's position from the drill name
@@ -78,7 +89,8 @@ const getExcludedHands = (drillName) => {
     // Exclude all hands that are NOT in the RFI range
     return allPossibleHands.filter(handKey => !rfiHands.includes(handKey));
   }
-  // For non-3bet drills, use the general excluded hands
+  
+  // For any other drills, use the general excluded hands
   return EXCLUDED_HANDS;
 };
 

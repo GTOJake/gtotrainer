@@ -136,7 +136,8 @@ export const drillActions = {
      'AKs': 'raise', 'AQs': ['raise', 'call'], 'AJs': ['raise', 'call'], 'ATs': ['raise', 'call'], 
      'A9s': ['raise', 'fold'], 'A8s': ['raise', 'fold'], 'A7s': ['raise', 'fold'], 'A6s': 'fold', 'A5s': ['raise', 'call'], 'A4s': ['raise', 'call'], 'A3s': ['raise', 'fold'],
      //suited kings
-     'KQs': ['raise', 'call'], 'KJs': ['raise', 'call'], 'KTs': ['raise', 'call'], 'K9s': ['raise', 'fold'], 'K8s': ['raise', 'fold'], 'K7s': ['raise', 'fold'], 'K6s': 'fold',
+     'KQs': ['raise', 'call'], 'KJs': ['raise', 'call'], 'KTs': ['raise', 'call'], 'K9s': ['raise', 'fold'], 'K8s': ['raise', 'fold'], 'K7s': ['raise', 'fold'], 
+     'K6s': 'fold', 'K5s': ['raise', 'fold'], 
      //suited queens
      'QJs': ['raise', 'call', 'fold'], 'QTs': 'fold',
      //suited jacks
