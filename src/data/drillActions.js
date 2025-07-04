@@ -202,7 +202,7 @@ export const drillActions = {
      //offsuit hands
      'AKo': 'raise', 'AQo': ['raise', 'call'], 'AJo': ['raise', 'call'], 'ATo': ['raise', 'call'], 'A9o': ['raise', 'fold'],
      'KQo': ['raise', 'call'], 'KJo': ['raise', 'call'], 'KTo': ['raise', 'fold'],
-     'QJo': 'fold', 'QTo': ['raise', 'fold'],
+     'QJo': 'raise', 'QTo': ['raise', 'fold'],
   },
   'Facing Open SB v UTG': {
      //pairs
@@ -227,7 +227,7 @@ export const drillActions = {
      '65s': ['call', 'raise', 'fold'],
      '54s': ['call', 'raise', 'fold'],
      //offsuit hands
-     'AKo': ['call', 'raise', 'fold'], 'AQo': ['call', 'raise', 'fold'], 'AJo': ['raise', 'fold'],
+     'AKo': ['call', 'raise', 'fold'], 'AQo': ['call', 'raise'], 'AJo': ['raise', 'fold'],
      'KQo': ['call', 'raise', 'fold'], 
   },
   'Facing Open SB v BTN': {

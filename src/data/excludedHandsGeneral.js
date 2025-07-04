@@ -33,5 +33,5 @@ export const EXCLUDED_HANDS = [
 
     '65o', '76o', '87o', '98o', 'T7o', 'T8o', 'T9o', 'J8o', 'J9o', 'Q8o', 'Q9o', 'K7o', 'K8o', 'K9o', 'A2o', 'A3o', 'A4o', 'A6o', 'A7o', 'A8o',
     '32s', '42s', '43s', '52s', '53s', '62s', '63s', '64s', '74s', '75s', '84s', '85s', '86s', '95s', '96s', '97s', 'T5s', 'T6s', 'T7s', 'J3s', 'J4s', 'J5s', 'J6s', 'J7s', 'J8s', 
-    'Q2s', 'Q3s', 'Q4s', 'Q5s', 'Q6s', 'Q7s', 'K2s', 'K3s'  
+    'Q2s', 'Q3s', 'Q4s', 'Q5s', 'Q6s', 'Q7s', 'K2s'
   ];
