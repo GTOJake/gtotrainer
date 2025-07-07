@@ -268,6 +268,13 @@ const PokerTable = ({ selectedDrill }) => {
       const randomPos = rfiPositions[Math.floor(Math.random() * rfiPositions.length)];
       setRandomPosition(randomPos);
     }
+    
+    if (selectedDrill?.name === 'Facing Open IP Random') {
+      const facingOpenDrills = ['Facing Open LJ v UTG', 'Facing Open BTN v UTG', 'Facing Open BTN v CO'];
+      const randomDrill = facingOpenDrills[Math.floor(Math.random() * facingOpenDrills.length)];
+      setRandomPosition(randomDrill);
+    }
+    
 
     const allHands = generateAllHands();
     
@@ -297,6 +304,13 @@ const PokerTable = ({ selectedDrill }) => {
   //****************************************************************************************************************************** */
   const getUserPosition = () => {
     if (!selectedDrill) return 'UTG';
+
+    if (selectedDrill.name === 'Facing Open IP Random') {
+      if (randomPosition === 'Facing Open LJ v UTG') return 'LJ';
+      if (randomPosition === 'Facing Open BTN v UTG') return 'BTN';
+      if (randomPosition === 'Facing Open BTN v CO') return 'BTN';
+      return 'LJ'; // fallback
+    }
 
     if (selectedDrill.name === 'RFI Random') {
       return randomPosition || 'UTG';
@@ -380,6 +394,10 @@ const PokerTable = ({ selectedDrill }) => {
     ...(selectedDrill?.name === 'Facing 3bet UTG v LJ' && { 'UTG': '6', 'LJ': '19.5' }),
     ...(selectedDrill?.name === 'Facing 3bet CO v BTN' && { 'CO': '6', 'BTN': '22.5' }),
     ...(selectedDrill?.name === 'Facing 3bet BTN v SB' && { 'BTN': '6', 'SB': '23.5' }),
+    // Handle Facing Open IP Random
+    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open LJ v UTG' && { 'UTG': '6' }),
+    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v UTG' && { 'UTG': '6' }),
+    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v CO' && { 'CO': '6' }),
   };
 
   const rearrangedPositions = [
@@ -447,6 +465,9 @@ const PokerTable = ({ selectedDrill }) => {
     let drillToCheck = selectedDrill.name;
     if (selectedDrill.name === 'RFI Random' && randomPosition) {
       drillToCheck = `RFI ${randomPosition}`;
+    }
+    if (selectedDrill.name === 'Facing Open IP Random' && randomPosition) {
+      drillToCheck = randomPosition;
     }
   
     const correctAction = getCorrectAction(userCards[0], userCards[1], drillToCheck);
@@ -618,6 +639,7 @@ const App = () => {
     { id: 6, name: 'Facing Open LJ v UTG'},
     { id: 7, name: 'Facing Open BTN v UTG'},
     { id: 8, name: 'Facing Open BTN v CO'},
+    { id: 21, name: 'Facing Open IP Random' },
     { id: 9, name: 'Facing Open SB v UTG'},
     { id: 10, name: 'Facing Open SB v BTN'},
     { id: 11, name: 'Facing Open BB v UTG'},
