@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/gtotrainer/static/css/main.e0e00519.css",
-    "main.js": "/gtotrainer/static/js/main.8093cb15.js",
+    "main.js": "/gtotrainer/static/js/main.fb56af50.js",
     "index.html": "/gtotrainer/index.html",
     "main.e0e00519.css.map": "/gtotrainer/static/css/main.e0e00519.css.map",
-    "main.8093cb15.js.map": "/gtotrainer/static/js/main.8093cb15.js.map"
+    "main.fb56af50.js.map": "/gtotrainer/static/js/main.fb56af50.js.map"
   },
   "entrypoints": [
     "static/css/main.e0e00519.css",
-    "static/js/main.8093cb15.js"
+    "static/js/main.fb56af50.js"
   ]
 }
