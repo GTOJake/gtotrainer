@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import './App.css';
 import { drillActions } from './data/drillActions';
-import { EXCLUDED_HANDS, EXCLUDED_HANDS_RFI, EXCLUDED_HANDS_FACING_OPEN } from './data/excludedHandsGeneral';
+import {EXCLUDED_HANDS_RFI, EXCLUDED_HANDS_FACING_OPEN, EXCLUDED_HANDS_BLINDS } from './data/excludedHandsGeneral';
 
 // Hand classification utilities
 const getHandKey = (card1, card2) => {
@@ -68,9 +68,14 @@ const getExcludedHands = (drillName) => {
     return EXCLUDED_HANDS_RFI;
   }
   
-  // Check if this is a Facing Open drill
-  if (drillName && drillName.startsWith('Facing Open ')) {
-    return EXCLUDED_HANDS_FACING_OPEN;
+  // Check if this is a Facing Open drill and doesn't contain "STR"
+  if (drillName && drillName.startsWith('Facing Open ') && !drillName.includes('STR')) {
+  return EXCLUDED_HANDS_FACING_OPEN;
+  }
+
+  // If drill involving Straddle, use new excluded hands
+  if (drillName && drillName.includes('STR')) {
+    return EXCLUDED_HANDS_BLINDS;
   }
   
   // Check if this is a 3bet drill
@@ -89,9 +94,6 @@ const getExcludedHands = (drillName) => {
     // Exclude all hands that are NOT in the RFI range
     return allPossibleHands.filter(handKey => !rfiHands.includes(handKey));
   }
-  
-  // For any other drills, use the general excluded hands
-  return EXCLUDED_HANDS;
 };
 
 // Helper function to generate all possible hand keys
@@ -263,23 +265,41 @@ const PokerTable = ({ selectedDrill }) => {
   };
   
   const dealNewHand = () => {
+    // Determine the current drill name for logic
+    let currentDrillName = selectedDrill?.name;
+    
     if (selectedDrill?.name === 'RFI Random') {
       const rfiPositions = ['UTG', 'LJ', 'HJ', 'CO', 'BTN'];
       const randomPos = rfiPositions[Math.floor(Math.random() * rfiPositions.length)];
       setRandomPosition(randomPos);
+      currentDrillName = `RFI ${randomPos}`;
     }
     
     if (selectedDrill?.name === 'Facing Open IP Random') {
       const facingOpenDrills = ['Facing Open LJ v UTG', 'Facing Open BTN v UTG', 'Facing Open BTN v CO'];
       const randomDrill = facingOpenDrills[Math.floor(Math.random() * facingOpenDrills.length)];
       setRandomPosition(randomDrill);
+      currentDrillName = randomDrill;
     }
-    
+  
+    if (selectedDrill?.name === 'Facing Open OOP Random') {
+      const facingOpenOOPDrills = ['Facing Open SB v UTG', 'Facing Open SB v BTN', 'Facing Open BB v UTG', 'Facing Open BB v BTN', 'Facing Open STR v UTG', 'Facing Open STR v BTN'];
+      const randomDrill = facingOpenOOPDrills[Math.floor(Math.random() * facingOpenOOPDrills.length)];
+      setRandomPosition(randomDrill);
+      currentDrillName = randomDrill;
+    }
+  
+    if (selectedDrill?.name === 'Facing 3bet Random') {
+      const facing3betDrills = ['Facing 3bet UTG v LJ', 'Facing 3bet CO v BTN', 'Facing 3bet BTN v SB'];
+      const randomDrill = facing3betDrills[Math.floor(Math.random() * facing3betDrills.length)];
+      setRandomPosition(randomDrill);
+      currentDrillName = randomDrill;
+    }
 
     const allHands = generateAllHands();
     
     // Get the appropriate excluded hands based on drill type
-    const excludedHands = getExcludedHands(selectedDrill?.name);
+    const excludedHands = getExcludedHands(currentDrillName);
     
     // Filter out excluded hands
     const availableHands = allHands.filter(hand => {
@@ -310,6 +330,23 @@ const PokerTable = ({ selectedDrill }) => {
       if (randomPosition === 'Facing Open BTN v UTG') return 'BTN';
       if (randomPosition === 'Facing Open BTN v CO') return 'BTN';
       return 'LJ'; // fallback
+    }
+
+    if (selectedDrill.name === 'Facing Open OOP Random') {
+      if (randomPosition === 'Facing Open SB v UTG') return 'SB';
+      if (randomPosition === 'Facing Open SB v BTN') return 'SB';
+      if (randomPosition === 'Facing Open BB v UTG') return 'BB';
+      if (randomPosition === 'Facing Open BB v BTN') return 'BB';
+      if (randomPosition === 'Facing Open STR v UTG') return 'STR';
+      if (randomPosition === 'Facing Open STR v BTN') return 'STR';
+      return 'SB'; // fallback
+    }
+
+    if (selectedDrill.name === 'Facing 3bet Random') {
+      if (randomPosition === 'Facing 3bet UTG v LJ') return 'UTG';
+      if (randomPosition === 'Facing 3bet CO v BTN') return 'CO';
+      if (randomPosition === 'Facing 3bet BTN v SB') return 'BTN';
+      return 'UTG'; // fallback
     }
 
     if (selectedDrill.name === 'RFI Random') {
@@ -362,17 +399,16 @@ const PokerTable = ({ selectedDrill }) => {
 
     
     
-
-    
-
-  
-    
     const drillWords = selectedDrill.name.split(' ');
     const position = drillWords[drillWords.length - 1];
     
     return positions.includes(position) ? position : 'UTG';
   };
 
+
+
+
+  
   const userPosition = getUserPosition();
   //************************************************************************************************************************************* */
   const chips = {
@@ -398,6 +434,16 @@ const PokerTable = ({ selectedDrill }) => {
     ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open LJ v UTG' && { 'UTG': '6' }),
     ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v UTG' && { 'UTG': '6' }),
     ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v CO' && { 'CO': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open SB v UTG' && { 'UTG': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open SB v BTN' && { 'BTN': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open BB v UTG' && { 'UTG': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open BB v BTN' && { 'BTN': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open STR v UTG' && { 'UTG': '6' }),
+    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open STR v BTN' && { 'BTN': '6' }),
+    // Handle Facing 3bet Random
+    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet UTG v LJ' && { 'UTG': '6', 'LJ': '19.5' }),
+    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet CO v BTN' && { 'CO': '6', 'BTN': '22.5' }),
+    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet BTN v SB' && { 'BTN': '6', 'SB': '23.5' }),
   };
 
   const rearrangedPositions = [
@@ -467,6 +513,14 @@ const PokerTable = ({ selectedDrill }) => {
       drillToCheck = `RFI ${randomPosition}`;
     }
     if (selectedDrill.name === 'Facing Open IP Random' && randomPosition) {
+      drillToCheck = randomPosition;
+    }
+
+    if (selectedDrill.name === 'Facing Open OOP Random' && randomPosition) {
+      drillToCheck = randomPosition;
+    }
+
+    if (selectedDrill.name === 'Facing 3bet Random' && randomPosition) {
       drillToCheck = randomPosition;
     }
   
@@ -630,16 +684,18 @@ const App = () => {
   const [selectedDrill, setSelectedDrill] = useState(null);
 
   const drills = [
+    { id: 20, name: 'RFI Random' },
+    { id: 21, name: 'Facing Open IP Random' },
+    { id: 22, name: 'Facing Open OOP Random'},
+    { id: 23, name: 'Facing 3bet Random' },
     { id: 1, name: 'RFI UTG' },
     { id: 2, name: 'RFI LJ' },
     { id: 3, name: 'RFI HJ' },
     { id: 4, name: 'RFI CO' },
     { id: 5, name: 'RFI BTN' },
-    { id: 20, name: 'RFI Random' },
     { id: 6, name: 'Facing Open LJ v UTG'},
     { id: 7, name: 'Facing Open BTN v UTG'},
     { id: 8, name: 'Facing Open BTN v CO'},
-    { id: 21, name: 'Facing Open IP Random' },
     { id: 9, name: 'Facing Open SB v UTG'},
     { id: 10, name: 'Facing Open SB v BTN'},
     { id: 11, name: 'Facing Open BB v UTG'},
