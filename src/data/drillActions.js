@@ -514,6 +514,6 @@ export const drillActions = {
      '54s': 'call',
      //offsuit hands
      'AKo': 'raise', 'AQo': ['raise', 'call'], 'AJo': 'call', 'ATo': ['raise', 'fold'], 
-     'KQo': 'call', 'KJ o': ['raise', 'fold', 'call'],
+     'KQo': 'call', 'KJo': ['raise', 'fold', 'call'],
   },
 };

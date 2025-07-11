@@ -234,7 +234,6 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
   const [correctActions, setCorrectActions] = useState(0);
   const [randomPosition, setRandomPosition] = useState(null);
   
-  
 
   useEffect(() => {
     // Reset stats when drill changes
