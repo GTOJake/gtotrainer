@@ -457,14 +457,14 @@ export const drillActions = {
      //suited jacks
      'JTs': 'call',
      //suited tens and lower
-     'T9s': ['raise', 'fold'], 
+     'T9s': ['call', 'fold'], 
      '98s': 'fold', 
      '87s': 'fold', 
      '76s': 'call',
      '65s': 'call',
      '54s': 'call',
      //offsuit hands
-     'AKo': ['raise', 'call'], 'AQo': ['raise', 'fold', 'call'], 
+     'AKo': ['raise', 'call'], 'AQo': ['raise', 'fold'], 
      'KQo': 'fold', 'KJo': 'fold',
      'QJo': 'fold', 
   },
@@ -498,7 +498,7 @@ export const drillActions = {
      '99': 'call', '88': 'call', '77': 'call', '66': 'call', '55': 'call', '44': 'call', '33': 'call', '22': ['fold', 'call'],
      //suited aces
      'AKs': 'raise', 'AQs': 'call', 'AJs': 'call', 'ATs': 'call', 'A9s': 'call', 'A8s': 'call', 'A7s': 'call', 'A6s': ['raise', 'call'],
-     'A5s': ['call', 'raise'], 'A4s': 'call', 'A3s': ['raise', 'call'], 'A2s': ['raise', 'call'],
+     'A5s': ['call', 'raise'], 'A4s': ['raise', 'call'], 'A3s': ['raise', 'call'], 'A2s': ['raise', 'call'],
      //suited kings
      'KQs': 'call', 'KJs': ['call', 'raise'], 'KTs': ['call', 'raise'], 'K9s': 'call', 'K8s': 'call',
      //suited queens

@@ -50,7 +50,7 @@
       margin-top: 0;
       margin-bottom: 20px;
       font-size: 18px;
-      color: #f39405;
+      color: #24abca;
       text-align: center;
     }
 
@@ -490,3 +490,111 @@
     50% { box-shadow: 0 0 20px #10b981, 0 0 40px #10b981, 0 0 60px #10b981; }
     100% { box-shadow: 0 0 20px #10b981, 0 0 40px #10b981, 0 0 60px #10b981; }
   }
+
+  .hand-history {
+    width: 20%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  /* Custom scrollbar for hand history */
+  .hand-history::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .hand-history::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  .hand-history::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.6);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+  
+  .hand-history::-webkit-scrollbar-thumb:hover {
+    background: rgba(150, 150, 150, 0.8);
+  }
+  
+  /* Firefox scrollbar styling */
+  .hand-history {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.2);
+  }
+  
+  .hand-history h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #24abca;
+    text-align: center;
+  }
+  
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  
+  .history-table th {
+    background: rgba(255, 255, 255, 0.1);
+    color: #24abca;
+    padding: 8px 4px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .history-table td {
+    padding: 6px 4px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .history-row {
+    transition: background-color 0.3s ease;
+  }
+  
+  .history-row.correct {
+    background-color: rgba(16, 185, 129, 0.2);
+  }
+  
+  .history-row.incorrect {
+    background-color: rgba(239, 68, 68, 0.2);
+  }
+  
+  .history-row:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .hand-column {
+    font-weight: bold;
+    font-family: monospace;
+  }
+  
+  .action-column {
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .drill-column {
+    font-size: 10px;
+    color: #94a3b8;
+    max-width: 80px;
+    word-wrap: break-word;
+  }
+  
+  .no-history-message {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 20px;
+  }
+
+
+  

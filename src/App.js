@@ -186,8 +186,44 @@ const Feedback = ({ feedback, onNext }) => {
   );
 };
 
+// Hand History Component
+const HandHistory = ({ history }) => {
+  if (!history || history.length === 0) {
+    return (
+      <div className="hand-history">
+        <h3>Hand History</h3>
+        <div className="no-history-message">No hands played yet</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="hand-history">
+      <h3>Hand History</h3>
+      <table className="history-table">
+        <thead>
+          <tr>
+            <th>Hand</th>
+            <th>Action</th>
+            <th>Drill</th>
+          </tr>
+        </thead>
+        <tbody>
+          {history.map((hand, index) => (
+            <tr key={index} className={`history-row ${hand.isCorrect ? 'correct' : 'incorrect'}`}>
+              <td className="hand-column">{hand.handKey}</td>
+              <td className="action-column">{hand.userAction}</td>
+              <td className="drill-column">{hand.drillName}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 // Poker Table Component
-const PokerTable = ({ selectedDrill }) => {
+const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
   const [userCards, setUserCards] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [showActions, setShowActions] = useState(true);
@@ -197,6 +233,8 @@ const PokerTable = ({ selectedDrill }) => {
   const [totalActions, setTotalActions] = useState(0);
   const [correctActions, setCorrectActions] = useState(0);
   const [randomPosition, setRandomPosition] = useState(null);
+  
+  
 
   useEffect(() => {
     // Reset stats when drill changes
@@ -204,6 +242,7 @@ const PokerTable = ({ selectedDrill }) => {
     setCorrectActions(0);
     setStreak(0);
     setRandomPosition(null);
+    onHandHistoryUpdate([]); // Reset history
     
     // Auto-start the drill by dealing a new hand if a drill is selected
     if (selectedDrill) {
@@ -214,7 +253,7 @@ const PokerTable = ({ selectedDrill }) => {
       setFeedback(null);
       setShowActions(false);
     }
-  }, [selectedDrill]);
+  }, [selectedDrill, onHandHistoryUpdate]);
   
   const positions = ['BTN', 'SB', 'BB', 'STR', 'UTG', 'LJ', 'HJ', 'CO'];
   
@@ -515,11 +554,11 @@ const PokerTable = ({ selectedDrill }) => {
     if (selectedDrill.name === 'Facing Open IP Random' && randomPosition) {
       drillToCheck = randomPosition;
     }
-
+  
     if (selectedDrill.name === 'Facing Open OOP Random' && randomPosition) {
       drillToCheck = randomPosition;
     }
-
+  
     if (selectedDrill.name === 'Facing 3bet Random' && randomPosition) {
       drillToCheck = randomPosition;
     }
@@ -546,7 +585,18 @@ const PokerTable = ({ selectedDrill }) => {
     if (result.isCorrect) {
       setCorrectActions(prev => prev + 1);
     }
-
+  
+    // Record the hand in history (for both correct and incorrect answers)
+    const historyEntry = {
+      handKey: handKey,
+      userAction: action,
+      isCorrect: result.isCorrect,
+      drillName: drillToCheck
+    };
+  
+    // Update hand history for all answers
+    onHandHistoryUpdate(prev => [historyEntry, ...prev]);
+  
     if (result.isCorrect) {
       // Increment streak for correct answers
       setStreak(prev => prev + 1);
@@ -682,6 +732,8 @@ const PokerTable = ({ selectedDrill }) => {
 //********************************************************************************************************************************************************* */
 const App = () => {
   const [selectedDrill, setSelectedDrill] = useState(null);
+  // In the App component, add handHistory state
+  const [handHistory, setHandHistory] = useState([]);
 
   const drills = [
     { id: 20, name: 'RFI Random' },
@@ -709,20 +761,25 @@ const App = () => {
     { id: 19, name: 'Facing 3bet BTN v SB'}
   ];
 
-  return (
-    <div className="app">
-      <div className="app-container">
-        <DrillList 
-          drills={drills}
-          selectedDrill={selectedDrill}
-          onDrillSelect={setSelectedDrill}
-        />
-        <PokerTable 
-          selectedDrill={selectedDrill}
-        />
-      </div>
+  
+
+// Update the return statement to include HandHistory component
+return (
+  <div className="app">
+    <div className="app-container">
+      <DrillList 
+        drills={drills}
+        selectedDrill={selectedDrill}
+        onDrillSelect={setSelectedDrill}
+      />
+      <PokerTable 
+        selectedDrill={selectedDrill}
+        onHandHistoryUpdate={setHandHistory}
+      />
+      <HandHistory history={handHistory} />
     </div>
-  );
+  </div>
+);
 };
 
 export default App;
