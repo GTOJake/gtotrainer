@@ -18,6 +18,8 @@
   border-right: 2px solid rgba(255, 255, 255, 0.1);
   padding: 20px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 /* Custom scrollbar for drill list */
@@ -40,17 +42,11 @@
   background: rgba(150, 150, 150, 0.8);
 }
 
-/* Firefox scrollbar styling */
-.drill-list {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.2);
-}
-
 .drill-list h3 {
   margin-top: 0;
   margin-bottom: 20px;
   font-size: 18px;
-  color: #24abca;
+  color: #9f3b10;
   text-align: center;
 }
 
@@ -95,12 +91,13 @@
   position: relative;
   width: 800px;
   height: 500px;
-  background: #0d5f0d;
+  background: radial-gradient(ellipse at center, #1a7a1a 0%, #0d5f0d 55%, #0a4a0a 100%);
   border-radius: 250px;
-  border: 8px solid #000000;
-  box-shadow: 
-    0 0 20px rgba(0, 0, 0, 0.5),
-    inset 0 0 30px rgba(0, 0, 0, 0.3);
+  border: 12px solid #1a1a1a;
+  box-shadow:
+    0 0 0 3px #3a3a3a,
+    0 0 30px rgba(0, 0, 0, 0.6),
+    inset 0 0 40px rgba(0, 0, 0, 0.35);
   overflow: visible;
   transition: all 0.6s ease-in-out;
 }
@@ -144,55 +141,47 @@
   z-index: 15;
 }
 
-.poker-chip {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #dc2626 100%);
+.chip-display {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.6), inset 0 -1px 3px rgba(0, 0, 0, 0.3);
+  gap: 4px;
   z-index: 15;
-  position: relative;
 }
 
-.poker-chip::before {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  opacity: 0.7;
-}
-
-.poker-chip::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  border-radius: 50%;
-  border: 4px dashed #ffffff;
-  opacity: 0.5;
-}
-
-.chip-inner {
-  width: 20px;
-  height: 20px;
+.chip-circles {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
-.chip-value {
-  font-size: 10px;
+.chip-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  margin-top: -13px;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.chip-dot:first-child {
+  margin-top: 0;
+}
+
+.chip-blue  { background: #1a6fef; }
+.chip-red   { background: #cc2222; }
+.chip-green { background: #1a9e44; }
+.chip-black { background: #222; }
+
+.chip-label {
+  font-size: 12px;
   font-weight: bold;
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .user-cards {
@@ -374,90 +363,84 @@
 
 
 .streak-flame {
-font-size: 24px;
-animation: flicker 1.5s ease-in-out infinite alternate;
+  font-size: 24px;
+  animation: flicker 1.5s ease-in-out infinite alternate;
 }
 
 .streak-number {
-font-size: 18px;
-font-weight: bold;
-color: #ffd700;
-min-width: 20px;
-text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffd700;
+  min-width: 20px;
+  text-align: center;
 }
 
 .stats-container {
-position: absolute;
-bottom: 20px;
-left: 20px;
-display: flex;
-flex-direction: row;
-gap: 20px;
-align-items: flex-end;
-z-index: 100;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: flex-end;
+  z-index: 100;
 }
 
 .accuracy-counter {
-position: absolute;
-bottom: 20px;
-left: 20px;
-display: flex;
-flex-direction: column;
-align-items: center;
-background: rgba(0, 0, 0, 0.7);
-padding: 10px 15px;
-border-radius: 12px;
-border: 2px solid rgba(59, 130, 246, 0.5);
-backdrop-filter: blur(5px);
-min-width: 100px;
-z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  backdrop-filter: blur(5px);
+  min-width: 100px;
+  z-index: 100;
 }
 
 .accuracy-label {
-font-size: 12px;
-color: #94a3b8;
-margin-bottom: 5px;
-text-transform: uppercase;
-letter-spacing: 0.5px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .accuracy-stats {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .accuracy-fraction {
-font-size: 14px;
-font-weight: bold;
-color: #3b82f6;
+  font-size: 14px;
+  font-weight: bold;
+  color: #3b82f6;
 }
 
 .accuracy-percentage {
-font-size: 16px;
-font-weight: bold;
-color: #10b981;
+  font-size: 16px;
+  font-weight: bold;
+  color: #10b981;
 }
 
 .accuracy-placeholder {
-font-size: 16px;
-color: #6b7280;
+  font-size: 16px;
+  color: #6b7280;
 }
 
 .streak-counter {
-position: absolute;
-bottom: 20px;
-left: 140px;
-display: flex;
-align-items: center;
-gap: 8px;
-background: rgba(0, 0, 0, 0.7);
-padding: 10px 15px;
-border-radius: 20px;
-border: 2px solid rgba(255, 215, 0, 0.5);
-backdrop-filter: blur(5px);
-z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 100;
 }
 
 @keyframes flicker {
@@ -483,6 +466,8 @@ backdrop-filter: blur(10px);
 border-left: 2px solid rgba(255, 255, 255, 0.1);
 padding: 20px;
 overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 /* Custom scrollbar for hand history */
@@ -503,12 +488,6 @@ transition: background 0.3s ease;
 
 .hand-history::-webkit-scrollbar-thumb:hover {
 background: rgba(150, 150, 150, 0.8);
-}
-
-/* Firefox scrollbar styling */
-.hand-history {
-scrollbar-width: thin;
-scrollbar-color: rgba(100, 100, 100, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 .hand-history h3 {
@@ -567,6 +546,53 @@ font-weight: bold;
 text-transform: uppercase;
 }
 
+.also-ok-column {
+font-size: 10px;
+color: #94a3b8;
+text-transform: uppercase;
+}
+
+.correct-action-column {
+font-size: 10px;
+text-transform: uppercase;
+color: #f87171;
+}
+
+.retry-btn {
+display: block;
+width: 100%;
+margin-bottom: 12px;
+padding: 8px;
+background: #09a7a2;
+color: white;
+border: none;
+border-radius: 6px;
+font-size: 12px;
+font-weight: bold;
+cursor: pointer;
+transition: background 0.2s ease;
+}
+
+.retry-btn:disabled {
+background: #374151;
+color: #6b7280;
+cursor: not-allowed;
+}
+
+.retry-btn:hover:not(:disabled) {
+background: #dc2626;
+}
+
+.retry-progress {
+font-size: 13px;
+font-weight: bold;
+color: #fbbf24;
+text-align: center;
+padding: 4px 10px;
+background: rgba(251, 191, 36, 0.1);
+border-radius: 6px;
+}
+
 .drill-column {
 font-size: 10px;
 color: #94a3b8;
@@ -581,4 +607,72 @@ font-style: italic;
 margin-top: 20px;
 }
 
+/* Chart button */
+.chart-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.chart-btn:hover {
+  opacity: 1;
+}
+.chart-btn-icon {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Chart modal */
+.chart-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.chart-modal {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: #1a1a2e;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+.chart-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 0.85rem;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.chart-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.chart-modal-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 48px);
+  border-radius: 8px;
+  object-fit: contain;
+}
 

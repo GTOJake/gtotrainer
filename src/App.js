@@ -34,16 +34,22 @@ const getHandKey = (card1, card2) => {
   }
 };
 
+// Reconstructs two card objects from a hand key string (e.g. 'AKs', 'AKo', 'AA')
+const handKeyToCards = (handKey) => {
+  const rankMap = {
+    '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7',
+    '8':'8','9':'9','T':'10','J':'J','Q':'Q','K':'K','A':'A'
+  };
+  const r1 = rankMap[handKey[0]];
+  const r2 = rankMap[handKey[1]];
+  if (handKey.length === 2)   return [{ suit: 'hearts',   rank: r1 }, { suit: 'clubs',    rank: r2 }]; // pair
+  if (handKey.endsWith('s'))  return [{ suit: 'diamonds', rank: r1 }, { suit: 'diamonds', rank: r2 }]; // suited
+  return                             [{ suit: 'hearts',   rank: r1 }, { suit: 'clubs',    rank: r2 }]; // offsuit
+};
+
 const getCorrectAction = (card1, card2, drillName) => {
   const handKey = getHandKey(card1, card2);
-  const actions = drillActions[drillName];
-  const correctAction = actions?.[handKey] || 'fold';
-  
-  // Handle array of valid actions
-  if (Array.isArray(correctAction)) {
-    return correctAction; // Return the array
-  }
-  return correctAction; // Return single action
+  return drillActions[drillName]?.[handKey] || 'fold';
 };
 
 // Helper function to get RFI hands for a position
@@ -120,6 +126,20 @@ const getAllPossibleHandKeys = () => {
   return hands;
 };
 
+// Converts a BB value into chip denomination breakdown
+// blue=1bb, red=5bb, green=25bb, black=100bb
+const getChipBreakdown = (bbValue) => {
+  let remaining = Math.round(parseFloat(bbValue));
+  const result = [];
+  for (const [denom, color] of [[100, 'black'], [25, 'green'], [5, 'red'], [1, 'blue']]) {
+    const count = Math.floor(remaining / denom);
+    remaining -= count * denom;
+    if (count > 0) result.push({ color, count });
+  }
+  if (result.length === 0) result.push({ color: 'blue', count: 1 });
+  return result;
+};
+
 // Drill List Component
 const DrillList = ({ drills, selectedDrill, onDrillSelect }) => {
   return (
@@ -187,53 +207,137 @@ const Feedback = ({ feedback, onNext }) => {
 };
 
 // Hand History Component
-const HandHistory = ({ history }) => {
-  if (!history || history.length === 0) {
-    return (
-      <div className="hand-history">
-        <h3>Hand History</h3>
-        <div className="no-history-message">No hands played yet</div>
-      </div>
-    );
-  }
+const HandHistory = ({ history, onRetryMistakes, isRetryMode }) => {
+  const hasErrors = history && history.some(h => !h.isCorrect);
+
+  const tableContent = history && history.length > 0 ? (
+    <table className="history-table">
+      <thead>
+        <tr>
+          <th>Hand</th>
+          <th>Action</th>
+          <th>Also OK</th>
+          <th>Correct</th>
+          <th>Drill</th>
+        </tr>
+      </thead>
+      <tbody>
+        {history.map((hand, index) => (
+          <tr key={index} className={`history-row ${hand.isCorrect ? 'correct' : 'incorrect'}`}>
+            <td className="hand-column">{hand.handKey}</td>
+            <td className="action-column">{hand.userAction}</td>
+            <td className="also-ok-column">
+              {hand.isCorrect && hand.allCorrect && hand.allCorrect.length > 1
+                ? hand.allCorrect.filter(a => a !== hand.userAction).join(' / ')
+                : ''}
+            </td>
+            <td className="correct-action-column">
+              {!hand.isCorrect && hand.allCorrect ? hand.allCorrect.join(' / ') : ''}
+            </td>
+            <td className="drill-column">{hand.drillName}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <div className="no-history-message">No hands played yet</div>
+  );
 
   return (
     <div className="hand-history">
       <h3>Hand History</h3>
-      <table className="history-table">
-        <thead>
-          <tr>
-            <th>Hand</th>
-            <th>Action</th>
-            <th>Drill</th>
-          </tr>
-        </thead>
-        <tbody>
-          {history.map((hand, index) => (
-            <tr key={index} className={`history-row ${hand.isCorrect ? 'correct' : 'incorrect'}`}>
-              <td className="hand-column">{hand.handKey}</td>
-              <td className="action-column">{hand.userAction}</td>
-              <td className="drill-column">{hand.drillName}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <button
+        className="retry-btn"
+        onClick={onRetryMistakes}
+        disabled={isRetryMode || !hasErrors}
+      >
+        {isRetryMode ? 'Retry in Progress...' : 'Retry Mistakes'}
+      </button>
+      {tableContent}
     </div>
   );
 };
 
+// Maps drill/scenario name → user's seat position
+const POSITION_MAP = {
+  'Facing Open LJ v UTG':      'LJ',
+  'Facing Open BTN v UTG':     'BTN',
+  'Facing Open BTN v CO':      'BTN',
+  'Facing Open SB v UTG':      'SB',
+  'Facing Open SB v BTN':      'SB',
+  'Facing Open BB v UTG':      'BB',
+  'Facing Open BB v BTN':      'BB',
+  'Facing Open STR v UTG':     'STR',
+  'Facing Open STR v BTN':     'STR',
+  'Facing Open STR v SB':      'STR',
+  'Facing Open STR v SB + BB': 'STR',
+  'Facing 3bet UTG v LJ':      'UTG',
+  'Facing 3bet CO v BTN':      'CO',
+  'Facing 3bet BTN v SB':      'BTN',
+};
+
+// Maps drill/scenario name → extra chip positions beyond SB/BB/STR defaults
+const CHIP_CONFIG = {
+  'Facing Open LJ v UTG':      { UTG: '6' },
+  'Facing Open BTN v UTG':     { UTG: '6' },
+  'Facing Open BTN v CO':      { CO: '6' },
+  'Facing Open SB v UTG':      { UTG: '6' },
+  'Facing Open SB v BTN':      { BTN: '6' },
+  'Facing Open BB v UTG':      { UTG: '6' },
+  'Facing Open BB v BTN':      { BTN: '6' },
+  'Facing Open STR v UTG':     { UTG: '6' },
+  'Facing Open STR v BTN':     { BTN: '6' },
+  'Facing Open STR v SB':      { SB: '8' },
+  'Facing Open STR v SB + BB': { SB: '8', BB: '8' },
+  'Facing 3bet UTG v LJ':      { UTG: '6', LJ: '19.5' },
+  'Facing 3bet CO v BTN':      { CO: '6', BTN: '22.5' },
+  'Facing 3bet BTN v SB':      { BTN: '6', SB: '23.5' },
+};
+
 // Poker Table Component
-const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
+const p = process.env.PUBLIC_URL;
+const DRILL_CHARTS = {
+  'RFI UTG':                   `${p}/RFI-UTG.png`,
+  'RFI LJ':                    `${p}/RFI-LJ.png`,
+  'RFI HJ':                    `${p}/RFI-HJ.png`,
+  'RFI CO':                    `${p}/RFI-CO.png`,
+  'RFI BTN':                   `${p}/RFI-BTN.png`,
+  'Facing Open LJ v UTG':      `${p}/Facing-Open-LJ-v-UTG.png`,
+  'Facing Open BTN v UTG':     `${p}/Facing-Open-BTN-v-UTG.png`,
+  'Facing Open BTN v CO':      `${p}/Facing-Open-BTN-v-CO.png`,
+  'Facing Open BTN v HJ':      `${p}/Facing-Open-BTN-v-HJ.png`,
+  'Facing Open SB v UTG':      `${p}/Facing-Open-SB-v-UTG.png`,
+  'Facing Open SB v BTN':      `${p}/Facing-Open-SB-v-BTN.png`,
+  'Facing Open BB v UTG':      `${p}/Facing-Open-BB-v-UTG.png`,
+  'Facing Open BB v BTN':      `${p}/Facing-Open-BB-v-BTN.png`,
+  'Facing Open STR v UTG':     `${p}/Facing-Open-STR-v-UTG.png`,
+  'Facing Open STR v BTN':     `${p}/Facing-Open-STR-v-BTN.png`,
+  'Facing Open STR v SB':      `${p}/Facing-Open-STR-v-SB.png`,
+  'Facing Open STR v SB + BB': `${p}/Facing-Open-STR-v-SB-BB.png`,
+  'Facing 3bet UTG v LJ':      `${p}/Facing-3Bet-UTG-v-LJ.png`,
+  'Facing 3bet CO v BTN':      `${p}/Facing-3Bet-CO-v-BTN.png`,
+  'Facing 3bet BTN v SB':      `${p}/Facing-3Bet-BTN-v-SB.png`,
+};
+
+const PokerTable = ({ selectedDrill, onHandHistoryUpdate, isRetryMode, retryQueue, onRetryComplete }) => {
   const [userCards, setUserCards] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [showActions, setShowActions] = useState(true);
-  const [showQuickSuccess, setShowQuickSuccess] = useState(false);
   const [streak, setStreak] = useState(0);
   const [correctAction, setCorrectAction] = useState(null);
   const [totalActions, setTotalActions] = useState(0);
   const [correctActions, setCorrectActions] = useState(0);
   const [randomPosition, setRandomPosition] = useState(null);
-  
+  const [retryIndex, setRetryIndex] = useState(0);
+  const [currentRetryDrill, setCurrentRetryDrill] = useState(null);
+  const [showChart, setShowChart] = useState(false);
+
+  const chartDrill = isRetryMode
+    ? currentRetryDrill
+    : selectedDrill?.name === 'RFI Random' && randomPosition
+      ? `RFI ${randomPosition}`
+      : (randomPosition ?? selectedDrill?.name);
+
 
   useEffect(() => {
     // Reset stats when drill changes
@@ -253,7 +357,16 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
       setShowActions(false);
     }
   }, [selectedDrill, onHandHistoryUpdate]);
-  
+
+  // Enter retry mode: deal the first hand when retryQueue is loaded
+  useEffect(() => {
+    if (isRetryMode && retryQueue && retryQueue.length > 0) {
+      setRetryIndex(0);
+      dealRetryHand(0, retryQueue);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRetryMode, retryQueue]);
+
   const positions = ['BTN', 'SB', 'BB', 'STR', 'UTG', 'LJ', 'HJ', 'CO'];
   
   // Generate all 169 possible hand combinations
@@ -302,6 +415,18 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
     return hands;
   };
   
+  // Deals a specific hand from the retry queue at the given index
+  const dealRetryHand = (idx, queue) => {
+    const q = queue || retryQueue;
+    if (!q || idx >= q.length) return;
+    const { handKey, drillName } = q[idx];
+    setCurrentRetryDrill(drillName);
+    setUserCards(handKeyToCards(handKey));
+    setCorrectAction(null);
+    setFeedback(null);
+    setShowActions(true);
+  };
+
   const dealNewHand = () => {
     // Determine the current drill name for logic
     let currentDrillName = selectedDrill?.name;
@@ -355,134 +480,27 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
     setUserCards(newCards);
     setFeedback(null);
     setShowActions(true);
-    setShowQuickSuccess(false);
   };
 
 
-  //****************************************************************************************************************************** */
   const getUserPosition = () => {
+    if (isRetryMode && currentRetryDrill) {
+      return POSITION_MAP[currentRetryDrill] ?? currentRetryDrill.split(' ').at(-1);
+    }
     if (!selectedDrill) return 'UTG';
-
-    if (selectedDrill.name === 'Facing Open IP Random') {
-      if (randomPosition === 'Facing Open LJ v UTG') return 'LJ';
-      if (randomPosition === 'Facing Open BTN v UTG') return 'BTN';
-      if (randomPosition === 'Facing Open BTN v CO') return 'BTN';
-      return 'LJ'; // fallback
+    const name = selectedDrill.name;
+    if (name === 'RFI Random') return randomPosition || 'UTG';
+    if (name === 'Facing Open IP Random' || name === 'Facing Open OOP Random' || name === 'Facing 3bet Random') {
+      return POSITION_MAP[randomPosition] ?? 'UTG';
     }
-
-    if (selectedDrill.name === 'Facing Open OOP Random') {
-      if (randomPosition === 'Facing Open SB v UTG') return 'SB';
-      if (randomPosition === 'Facing Open SB v BTN') return 'SB';
-      if (randomPosition === 'Facing Open BB v UTG') return 'BB';
-      if (randomPosition === 'Facing Open BB v BTN') return 'BB';
-      if (randomPosition === 'Facing Open STR v UTG') return 'STR';
-      if (randomPosition === 'Facing Open STR v BTN') return 'STR';
-      return 'SB'; // fallback
-    }
-
-    if (selectedDrill.name === 'Facing 3bet Random') {
-      if (randomPosition === 'Facing 3bet UTG v LJ') return 'UTG';
-      if (randomPosition === 'Facing 3bet CO v BTN') return 'CO';
-      if (randomPosition === 'Facing 3bet BTN v SB') return 'BTN';
-      return 'UTG'; // fallback
-    }
-
-    if (selectedDrill.name === 'RFI Random') {
-      return randomPosition || 'UTG';
-    }
-    
-    // Special case for "Facing Open LJ v UTG" - user should be at LJ position
-    if (selectedDrill.name === 'Facing Open LJ v UTG') {
-      return 'LJ';
-    }
-    if (selectedDrill.name === 'Facing Open BTN v UTG') {
-      return 'BTN';
-    }
-    if (selectedDrill.name === 'Facing Open BTN v CO') {
-      return 'BTN';
-    }
-    if (selectedDrill.name === 'Facing Open SB v UTG') {
-      return 'SB';
-    }
-    if (selectedDrill.name === 'Facing Open SB v BTN') {
-      return 'SB';
-    }
-    if (selectedDrill.name === 'Facing Open BB v UTG') {
-      return 'BB';
-    }
-    if (selectedDrill.name === 'Facing Open BB v BTN') {
-      return 'BB';
-    }
-    if (selectedDrill.name === 'Facing Open STR v UTG') {
-      return 'STR';
-    }
-    if (selectedDrill.name === 'Facing Open STR v BTN') {
-      return 'STR';
-    }
-    if (selectedDrill.name === 'Facing Open STR v SB') {
-      return 'STR';
-    }
-    if (selectedDrill.name === 'Facing Open STR v SB + BB') {
-      return 'STR';
-    }
-    if (selectedDrill.name === 'Facing 3bet UTG v LJ') {
-      return 'UTG';
-    }
-    if (selectedDrill.name === 'Facing 3bet CO v BTN') {
-      return 'CO';
-    }
-    if (selectedDrill.name === 'Facing 3bet BTN v SB') {
-      return 'BTN';
-    }
-
-    
-    
-    const drillWords = selectedDrill.name.split(' ');
-    const position = drillWords[drillWords.length - 1];
-    
-    return positions.includes(position) ? position : 'UTG';
+    return POSITION_MAP[name] ?? name.split(' ').at(-1);
   };
 
-
-
-
-  
   const userPosition = getUserPosition();
-  //************************************************************************************************************************************* */
-  const chips = {
-    'SB': '.5',
-    'BB': '1',
-    'STR': '2',
-    // Add UTG chip only for the "Facing Open LJ v UTG" drill
-    ...(selectedDrill?.name === 'Facing Open LJ v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open BTN v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open BTN v CO' && { 'CO': '6' }),
-    ...(selectedDrill?.name === 'Facing Open SB v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open SB v BTN' && { 'BTN': '6' }),
-    ...(selectedDrill?.name === 'Facing Open BB v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open BB v BTN' && { 'BTN': '6' }),
-    ...(selectedDrill?.name === 'Facing Open STR v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open STR v BTN' && { 'BTN': '6' }),
-    ...(selectedDrill?.name === 'Facing Open STR v SB' && { 'SB': '8' }),
-    ...(selectedDrill?.name === 'Facing Open STR v SB + BB' && { 'SB': '8', 'BB': '8' }),
-    ...(selectedDrill?.name === 'Facing 3bet UTG v LJ' && { 'UTG': '6', 'LJ': '19.5' }),
-    ...(selectedDrill?.name === 'Facing 3bet CO v BTN' && { 'CO': '6', 'BTN': '22.5' }),
-    ...(selectedDrill?.name === 'Facing 3bet BTN v SB' && { 'BTN': '6', 'SB': '23.5' }),
-    // Handle Facing Open IP Random
-    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open LJ v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open IP Random' && randomPosition === 'Facing Open BTN v CO' && { 'CO': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open SB v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open SB v BTN' && { 'BTN': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open BB v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open BB v BTN' && { 'BTN': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open STR v UTG' && { 'UTG': '6' }),
-    ...(selectedDrill?.name === 'Facing Open OOP Random' && randomPosition === 'Facing Open STR v BTN' && { 'BTN': '6' }),
-    // Handle Facing 3bet Random
-    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet UTG v LJ' && { 'UTG': '6', 'LJ': '19.5' }),
-    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet CO v BTN' && { 'CO': '6', 'BTN': '22.5' }),
-    ...(selectedDrill?.name === 'Facing 3bet Random' && randomPosition === 'Facing 3bet BTN v SB' && { 'BTN': '6', 'SB': '23.5' }),
-  };
+
+  // Resolve the active scenario name (randomPosition for Random drills, drill name otherwise)
+  const activeDrillName = isRetryMode ? currentRetryDrill : (randomPosition ?? selectedDrill?.name);
+  const chips = { SB: '.5', BB: '1', STR: '2', ...(CHIP_CONFIG[activeDrillName] ?? {}) };
 
   const rearrangedPositions = [
     ...positions.slice(positions.indexOf(userPosition)),
@@ -512,11 +530,18 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
     const isDiagonal = Math.abs(Math.cos(angle)) > 0.1 && Math.abs(Math.sin(angle)) > 0.1;
     const playerRadiusX = isDiagonal ? 58 : 50;
     const playerRadiusY = isDiagonal ? 55 : 50;
-    const centerOffset = type === 'button' ? -1.5 : -1.5;
-    
-    const x = 50 + (playerRadiusX * centerOffset) * Math.cos(angle);
-    const y = 50 + (playerRadiusY * centerOffset) * Math.sin(angle);
-    
+    const centerOffset = -1.5;
+
+    let x = 50 + (playerRadiusX * centerOffset) * Math.cos(angle);
+    let y = 50 + (playerRadiusY * centerOffset) * Math.sin(angle);
+
+    if (type === 'button') {
+      // Shift dealer button perpendicular to the radial direction to avoid chip collision
+      const perpOffset = 38;
+      x += -Math.sin(angle) * perpOffset;
+      y += Math.cos(angle) * perpOffset;
+    }
+
     return {
       position: 'absolute',
       left: `${x}%`,
@@ -544,82 +569,92 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
   };
 
   const handleAction = (action) => {
-    if (!selectedDrill || feedback || showQuickSuccess) return;
-    
-    let drillToCheck = selectedDrill.name;
-    if (selectedDrill.name === 'RFI Random' && randomPosition) {
-      drillToCheck = `RFI ${randomPosition}`;
-    }
-    if (selectedDrill.name === 'Facing Open IP Random' && randomPosition) {
-      drillToCheck = randomPosition;
-    }
-  
-    if (selectedDrill.name === 'Facing Open OOP Random' && randomPosition) {
-      drillToCheck = randomPosition;
-    }
-  
-    if (selectedDrill.name === 'Facing 3bet Random' && randomPosition) {
-      drillToCheck = randomPosition;
-    }
-  
+    if ((!selectedDrill && !isRetryMode) || feedback) return;
+
+    const drillToCheck = isRetryMode
+      ? currentRetryDrill
+      : (selectedDrill.name.endsWith('Random') && randomPosition)
+        ? (selectedDrill.name === 'RFI Random' ? `RFI ${randomPosition}` : randomPosition)
+        : selectedDrill.name;
+
     const correctAction = getCorrectAction(userCards[0], userCards[1], drillToCheck);
     const handKey = getHandKey(userCards[0], userCards[1]);
-    
+
     // Check if action is correct (handle both single actions and arrays)
-    const isCorrect = Array.isArray(correctAction) 
+    const isCorrect = Array.isArray(correctAction)
       ? correctAction.includes(action)
       : action === correctAction;
-    
+
     const result = {
       isCorrect: isCorrect,
-      correctAction: Array.isArray(correctAction) 
-        ? correctAction.join(' or ') // Display as "fold or raise"
+      correctAction: Array.isArray(correctAction)
+        ? correctAction.join(' or ')
         : correctAction,
       handKey: handKey,
       userAction: action
     };
-    
+
     // Update totals
     setTotalActions(prev => prev + 1);
     if (result.isCorrect) {
       setCorrectActions(prev => prev + 1);
     }
-  
-    // Record the hand in history (for both correct and incorrect answers)
+
+    // Record the hand in history
     const historyEntry = {
       handKey: handKey,
       userAction: action,
       isCorrect: result.isCorrect,
-      drillName: drillToCheck
+      drillName: drillToCheck,
+      allCorrect: Array.isArray(correctAction) ? correctAction : [correctAction]
     };
-  
-    // Update hand history for all answers
     onHandHistoryUpdate(prev => [historyEntry, ...prev]);
-  
+
+    if (isRetryMode) {
+      const nextIdx = retryIndex + 1;
+      setRetryIndex(nextIdx);
+      if (result.isCorrect) {
+        setCorrectAction(correctAction);
+        setShowActions(false);
+        setTimeout(() => {
+          if (nextIdx >= retryQueue.length) {
+            onRetryComplete();
+          } else {
+            dealRetryHand(nextIdx);
+          }
+        }, 200);
+      } else {
+        setStreak(0);
+        setFeedback(result);
+        setShowActions(false);
+      }
+      return;
+    }
+
     if (result.isCorrect) {
-      // Increment streak for correct answers
       setStreak(prev => prev + 1);
-      
-      // Show green glow on all correct actions
       setCorrectAction(correctAction);
       setShowActions(false);
-      
-      // Auto-advance to next hand after brief delay
       setTimeout(() => {
         dealNewHand();
       }, 200);
     } else {
-      // Reset streak for incorrect answers
       setStreak(0);
-      
-      // Show error feedback and require manual advance
       setFeedback(result);
       setShowActions(false);
     }
   };
 
   const handleNextHand = () => {
-    dealNewHand();
+    if (isRetryMode) {
+      if (retryIndex >= retryQueue.length) {
+        onRetryComplete();
+      } else {
+        dealRetryHand(retryIndex);
+      }
+    } else {
+      dealNewHand();
+    }
   };
 
   return (
@@ -637,10 +672,24 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
               )}
               
               {chips[position] && (
-                <div className="poker-chip" style={getButtonChipPosition(index, 8, 'chip')}>
-                  <div className="chip-inner">
-                    <div className="chip-value">{chips[position]}</div>
+                <div className="chip-display" style={getButtonChipPosition(index, 8, 'chip')}>
+                  <div className="chip-circles">
+                    {(() => {
+                      const allChips = getChipBreakdown(chips[position])
+                        .flatMap(({ color, count }) =>
+                          Array.from({ length: Math.min(count, 4) }, () => color)
+                        )
+                        .reverse();
+                      return allChips.map((color, i) => (
+                        <div
+                          key={`${color}-${i}`}
+                          className={`chip-dot chip-${color}`}
+                          style={{ zIndex: allChips.length - i }}
+                        />
+                      ));
+                    })()}
                   </div>
+                  <div className="chip-label">{chips[position]}</div>
                 </div>
               )}
               
@@ -677,11 +726,30 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
           <div className="streak-flame">🔥</div>
           <div className="streak-number">{streak}</div>
         </div>
+
+        {isRetryMode && retryQueue && retryQueue.length > 0 && (
+          <div className="retry-progress">
+            Retry: {Math.min(retryIndex, retryQueue.length)}/{retryQueue.length}
+          </div>
+        )}
       </div>
-      
+
       <Feedback feedback={feedback} onNext={handleNextHand} />
-      
-      {selectedDrill && userCards && (
+
+      {showChart && DRILL_CHARTS[chartDrill] && (
+        <div className="chart-modal-overlay" onClick={() => setShowChart(false)}>
+          <div className="chart-modal" onClick={e => e.stopPropagation()}>
+            <button className="chart-modal-close" onClick={() => setShowChart(false)}>✕</button>
+            <img
+              src={DRILL_CHARTS[chartDrill]}
+              alt={`${chartDrill} strategy chart`}
+              className="chart-modal-img"
+            />
+          </div>
+        </div>
+      )}
+
+      {(selectedDrill || isRetryMode) && userCards && (
         <div className="action-buttons">
           <button 
             className={`action-btn fold-btn ${
@@ -713,7 +781,16 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
           >
             Call
           </button>
-          
+
+          {DRILL_CHARTS[chartDrill] && (
+            <button
+              className="chart-btn"
+              onClick={() => setShowChart(true)}
+              title="View strategy chart"
+            >
+              <img src={`${process.env.PUBLIC_URL}/Poker-Ranges-Chart-Icon.png`} alt="chart" className="chart-btn-icon" />
+            </button>
+          )}
         </div>
       )}
       
@@ -728,11 +805,33 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate }) => {
 };
 
 // Main App Component
-//********************************************************************************************************************************************************* */
 const App = () => {
   const [selectedDrill, setSelectedDrill] = useState(null);
-  // In the App component, add handHistory state
   const [handHistory, setHandHistory] = useState([]);
+  const [retryQueue, setRetryQueue] = useState([]);
+  const [isRetryMode, setIsRetryMode] = useState(false);
+
+  const startRetrySession = () => {
+    const seen = new Set();
+    const queue = handHistory
+      .filter(h => !h.isCorrect)
+      .filter(h => {
+        const key = `${h.handKey}|${h.drillName}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map(h => ({ handKey: h.handKey, drillName: h.drillName }))
+      .reverse();
+    setHandHistory([]);
+    setRetryQueue(queue);
+    setIsRetryMode(true);
+  };
+
+  const endRetrySession = () => {
+    setIsRetryMode(false);
+    setRetryQueue([]);
+  };
 
   const drills = [
     { id: 20, name: 'RFI Random' },
@@ -771,11 +870,18 @@ return (
         selectedDrill={selectedDrill}
         onDrillSelect={setSelectedDrill}
       />
-      <PokerTable 
+      <PokerTable
         selectedDrill={selectedDrill}
         onHandHistoryUpdate={setHandHistory}
+        isRetryMode={isRetryMode}
+        retryQueue={retryQueue}
+        onRetryComplete={endRetrySession}
       />
-      <HandHistory history={handHistory} />
+      <HandHistory
+        history={handHistory}
+        onRetryMistakes={startRetrySession}
+        isRetryMode={isRetryMode}
+      />
     </div>
   </div>
 );
