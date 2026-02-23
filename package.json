@@ -1,7 +1,8 @@
 {
   "name": "gtotrainer",
   "version": "0.1.0",
-  "homepage": "https://GTOJake.github.io/gtotrainer",
+  "homepage": "./",
+  "main": "public/electron.js",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
@@ -19,7 +20,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "electron-dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_IS_DEV=1 electron .\"",
+    "electron-build": "npm run build && electron-builder"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +43,29 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.6.0",
+    "electron-builder": "^26.8.1",
+    "gh-pages": "^6.3.0",
+    "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.gtojake.gtotrainer",
+    "productName": "GTO Trainer",
+    "files": [
+      "build/**/*"
+    ],
+    "extraMetadata": {
+      "main": "build/electron.js"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/poker-icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

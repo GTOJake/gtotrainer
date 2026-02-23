@@ -302,6 +302,7 @@ const DRILL_CHARTS = {
   'RFI HJ':                    `${p}/RFI-HJ.png`,
   'RFI CO':                    `${p}/RFI-CO.png`,
   'RFI BTN':                   `${p}/RFI-BTN.png`,
+  'RFI SB':                    `${p}/RFI-SB.png`,
   'Facing Open LJ v UTG':      `${p}/Facing-Open-LJ-v-UTG.png`,
   'Facing Open BTN v UTG':     `${p}/Facing-Open-BTN-v-UTG.png`,
   'Facing Open BTN v CO':      `${p}/Facing-Open-BTN-v-CO.png`,
@@ -432,7 +433,7 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate, isRetryMode, retryQueu
     let currentDrillName = selectedDrill?.name;
     
     if (selectedDrill?.name === 'RFI Random') {
-      const rfiPositions = ['UTG', 'LJ', 'HJ', 'CO', 'BTN'];
+      const rfiPositions = ['UTG', 'LJ', 'HJ', 'CO', 'BTN', 'SB'];
       const randomPos = rfiPositions[Math.floor(Math.random() * rfiPositions.length)];
       setRandomPosition(randomPos);
       currentDrillName = `RFI ${randomPos}`;
@@ -722,16 +723,16 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate, isRetryMode, retryQueu
           </div>
         </div>
 
-        <div className="streak-counter">
-          <div className="streak-flame">🔥</div>
-          <div className="streak-number">{streak}</div>
-        </div>
-
         {isRetryMode && retryQueue && retryQueue.length > 0 && (
           <div className="retry-progress">
             Retry: {Math.min(retryIndex, retryQueue.length)}/{retryQueue.length}
           </div>
         )}
+      </div>
+
+      <div className="streak-counter">
+        <div className="streak-flame">🔥</div>
+        <div className="streak-number">{streak}</div>
       </div>
 
       <Feedback feedback={feedback} onNext={handleNextHand} />
@@ -843,6 +844,7 @@ const App = () => {
     { id: 3, name: 'RFI HJ' },
     { id: 4, name: 'RFI CO' },
     { id: 5, name: 'RFI BTN' },
+    { id: 24, name: 'RFI SB' },
     { id: 6, name: 'Facing Open LJ v UTG'},
     { id: 7, name: 'Facing Open BTN v UTG'},
     { id: 8, name: 'Facing Open BTN v CO'},
