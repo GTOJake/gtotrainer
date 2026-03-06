@@ -658,6 +658,25 @@ const PokerTable = ({ selectedDrill, onHandHistoryUpdate, isRetryMode, retryQueu
     }
   };
 
+  // Keyboard shortcuts: a=fold, s=raise, d=call, f=next hand, g=chart
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const drillActive = (selectedDrill || isRetryMode) && userCards;
+      if (!drillActive) return;
+      switch (e.key.toLowerCase()) {
+        case 'a': if (showActions) handleAction('fold'); break;
+        case 's': if (showActions) handleAction('raise'); break;
+        case 'd': if (showActions) handleAction('call'); break;
+        case 'f': if (feedback) handleNextHand(); break;
+        case 'g': setShowChart(prev => !prev); break;
+        default: break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDrill, isRetryMode, userCards, showActions, feedback, handleAction, handleNextHand]);
+
   return (
     <div className="poker-table-container">
       <div className="table-wrapper">
